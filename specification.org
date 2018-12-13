@@ -1,0 +1,266 @@
+#+TITLE: GRL Specification
+
+Here we will describe a formal specification for the GRL.
+
+A problem with the GRL is that there are 'two' languages: a qualitative one, and a quantitative one.
+These languages share the same structure.
+We give this specification with the qualitative and quantitative values 'factored out'.
+Notes on syntax are given at the bottom.
+
+* Imported Primitives
+
+We will make use of strings and natural numbers in our definitions.
+
+#+BEGIN_EXAMPLE
+str: String      = "Plain-old-Strings"
+n  : Nat         = "Natural numbers i.e. 0,1,..."
+#+END_EXAMPLE
+* Values
+** Qualitative Values
+
+ When building qualitative GRL models we make use of the following enumerated values:
+
+ #+BEGIN_EXAMPLE
+ c_{qual}    : Contribution_{qual} = Make | SomePositive | Help | Unknown_{con} | Hurt | SomeNegative | Break
+ s_{qual}    : Satisfaction_{qual} = Denied | WeaklyDenied | WeaklySatisfied | Satisfied | Conflict | Unknown_{sat} | None_{sat}
+ i_{qual}    : Importance_{qual}   = None_{imp} | Low | Medium | High
+ #+END_EXAMPLE
+
+** Quantitative Values
+
+ When building quantitative GRL models we make use of 'ranged' integers: Integers in the interval $[x,y]$ i.e. ${i \in Int_{[x,y]} \mid x \leq i \leq y}$.
+
+ #+BEGIN_EXAMPLE
+ i_{r} : Int_{[x,y}}
+ c_{num} : Contribution_{num} \equiv Int_{[-100,100]}
+ s_{num} : Satisfaction_{num} \equiv Int_{[-100,100]}
+ i_{num} : Importance_{num}   \equiv Int_{[0,100]}
+ #+END_EXAMPLE
+
+* Core Syntax
+
+Here we describe an abstract syntax for the GRL agnostic to qualitative/quantitative values.
+Types and values subscripted with 'q' state that the value is either qualitative or quantitative.
+We assume that our GRL specs contain qualitative values or quantitative values but not both.
+This diverges from the official description but simplifies our life.
+
+** Expressions
+
+Here we describe expressions:
+
+#+BEGIN_EXAMPLE
+msat_{q} : MaybeSatis_{q} = Nothing | Just s_{q}
+d        : Decomposition  = AND | IOR | XOR
+actor    : Actor          = (Actor    str   i msat_{q})
+goal     : Goal           = (Goal     str d i msat_{q})
+sofgoal  : SoftGoal       = (SoftGoal str d i msat_{q})
+task     : Task           = (Task     str d i msat_{q})
+resource : Resource       = (Resource str d i msat_{q})
+belief   : Belief         = (Belief   str   i msat_{q})
+
+node = actor | goal | softgoal | task | resource | belief
+
+link : Link = (Contribution node c node)
+            | (Correlation node c node)
+            | (Dependency node node)
+            | (Decomposition node node)
+            | (Encloses node node)
+#+END_EXAMPLE
+
+We could express links with list like structures to reduce language verbosity, but this construction simplifies things greatly for our needs.
+
+** Terms and Types
+
+Here we describe the remaining terms and language types.
+
+ #+BEGIN_EXAMPLE
+expr = x | node | link | (Let x := expr in expr) | (Sequence expr expr)
+spec = (Specification expr)
+T_{1} : Type = String | Nat
+             | Satisfaction_{q} | Contribution_{q} | Importance_{q} | MaybeSatis_{q}
+             | Actor | Goal | SoftGoal | Resource | Task | Belief | Link
+             | Specification
+\Gamma = (Extend \Gamma (x:T_{1})) | (Contract \Gamma (x:T_{1})) | \EmptySet
+ #+END_EXAMPLE
+
+* Example Specifications
+
+Here we provide a sample specification that is described using Qualitative values.
+
+#+BEGIN_EXAMPLE
+(Specification
+  (let conn := (Goal "Connection" AND NONE_{i} Nothing)
+    in (let net  := (Task "Internet" AND NONE_{i} WeaklyDenied)
+    in (let wire := (Task "Wireless" AND NONE_{i} WeaklySatisfied)
+    in (let lan  := (Task "LAN"      AND NONE_{i} None_{s})
+    in (Decomposition conn {net, wire, lan}))))))
+#+END_EXAMPLE
+
+* Typing Rules
+
+To ensure that we build correct specifications we have typing rules that provide rules for well-formed expressions.
+When defining our expressions we used, where appropriate, a short hand for providing the majority of typing rules.
+An explanation of this shorthand is given at the end of the document.
+The typing rules given here override any interpretation through the shorthand notation.
+** Variables
+#+BEGIN_EXAMPLE
+x : T_{1} \in \Gamma
+---------
+x : T_{1}
+#+END_EXAMPLE
+
+** Expressions
+Many expressions were described using the shorthand, we now provide the remaining rules for links.
+We abuse set notation to reduce the verbosity of the rules further.
+*** Contribution
+#+BEGIN_EXAMPLE
+c : Contribution_{q}
+\Gamma\vdash node_{1} : T_{1}
+\Gamma\vdash node_{2} : T_{2}
+T_{1}\in {Goal, Resource, Task, Belief, SoftGoal}
+T_{2}\in {Task, SoftGoal, Goal}
+------------------------------------------------------------
+\Gamma\vdash(Contribution node_{1} c node_{2}) : Link
+#+END_EXAMPLE
+*** Correlation
+#+BEGIN_EXAMPLE
+c : Correlation_{q}
+\Gamma\vdash node_{1} : T_{1}
+\Gamma\vdash node_{2} : T_{2}
+T_{1}\in {Goal, Resource, Task, Belief, SoftGoal}
+T_{2}\in {Task, SoftGoal, Goal}
+----------------------------------------------------------
+\Gamma\vdash(Correlation node_{1} c node_{2}) : Link
+#+END_EXAMPLE
+*** Dependency
+#+BEGIN_EXAMPLE
+\Gamma\vdash node_{1} : T_{1}
+\Gamma\vdash node_{2} : T_{2}
+T_{1}\in {Actor, Goal, Resource, Task, Softgoal}
+T_{2}\in {Actor, Goal, Resource, Task, Softgoal}
+--------------------------------------------------------
+\Gamma\vdash(Dependency node_{1} node_{2}) : Link
+#+END_EXAMPLE
+*** Decomposition
+#+BEGIN_EXAMPLE
+\Gamma\vdash node_{1} : T_{1}
+\Gamma\vdash node_{2} : T_{2}
+T_{1}\in {Goal, Softgoal, Resource, Task}
+T_{2}\in {Actor, Goal, Resource, Task, Softgoal}
+----------------------------------------------------------
+\Gamma\vdash(Decomposition node_{1} node_{2}) : Link
+#+END_EXAMPLE
+*** Enclosures
+#+BEGIN_EXAMPLE
+\Gamma\vdash node_{1} : Actor
+\Gamma\vdash node_{2} : T_{1}
+T_{1}\in {Goal, Softgoal, Resource, Belief, Task}
+----------------------------------------------------------
+\Gamma\vdash(Encloses node_{1} node_{2}) : Link
+#+END_EXAMPLE
+** Statements
+*** Specifications
+#+BEGIN_EXAMPLE
+\Gamma\vdash expr : T_{1}
+-------------------------------------------------
+\Gamma\vdash (Specification expr) : Specification
+#+END_EXAMPLE
+*** Let Bindings
+#+BEGIN_EXAMPLE
+x : T_{1}
+\Gamma\vdash e_{1} : T_{1}
+(Extend \Gamma (x : T_{1}))\vdash e_{2} : T_{2}
+-----------------------------------------------
+\Gamma (Let x := e_{1} in e_{2}) : T_{2}
+#+END_EXAMPLE
+*** Sequencing
+#+BEGIN_EXAMPLE
+\Gamma\vdash expr_{1} : T_{1}
+\Gamma\vdash expr_{2} : T_{2}
+-------------------------------------------------
+\Gamma\vdash (Sequence expr_{1} expr_{2}) : T_{2}
+#+END_EXAMPLE
+
+* Notes on syntax.
+** Shorthand for typing rules.
+If we see a definition of the form:
+#+BEGIN_EXAMPLE
+<var> : <Type> = <term>+
+#+END_EXAMPLE
+
+This can provide a concise definition *and* typing rule for many expressions
+We give an example for atomic enumerated types and complex expressions.
+
+*** Enumerated types
+Given the following example.
+ #+BEGIN_EXAMPLE
+ b : Bool = true | false
+ #+END_EXAMPLE
+This is short for the following syntax and type definition:
+
+#+BEGIN_EXAMPLE
+b = true | false
+T = Bool
+#+END_EXAMPLE
+
+With the shorthand definition the following typing judgements are implied and the following long form need not be given when expressing typing rules.
+
+ #+BEGIN_EXAMPLE
+
+ ------------
+ true : Bool
+ #+END_EXAMPLE
+
+ #+BEGIN_EXAMPLE
+
+ ------------
+ false : Bool
+ #+END_EXAMPLE
+
+*** Complex Type
+Given the following set of expressions:
+#+BEGIN_EXAMPLE
+str : String = "Plain-old-Strings"
+b : Bool = true | false
+x : Foobar = Foo b | Bar str
+#+END_EXAMPLE
+
+This is shorthand for:
+
+#+BEGIN_EXAMPLE
+e = str | true | false | Foo b | Bar str
+T = String | Bool | Foobar
+#+END_EXAMPLE
+
+and implies the following typing-judgements:
+
+#+BEGIN_EXAMPLE
+
+------------
+str : String
+#+END_EXAMPLE
+
+#+BEGIN_EXAMPLE
+
+-----------
+true : Bool
+#+END_EXAMPLE
+
+#+BEGIN_EXAMPLE
+
+------------
+false : Bool
+#+END_EXAMPLE
+
+#+BEGIN_EXAMPLE
+e : String
+-------------
+Bar e : Foobar
+#+END_EXAMPLE
+
+
+#+BEGIN_EXAMPLE
+e : Bool
+--------------
+Foo e : Foobar
+#+END_EXAMPLE
