@@ -4,5 +4,6 @@ public enum LinkKind {
     correlation,
     contribution,
     decomposition,
-    dependency
+    dependency,
+    enclosure
 }

@@ -13,7 +13,10 @@ plugins {
 }
 
 test {
-  testLogging.showStandardStreams = true
+    testLogging {
+        outputs.upToDateWhen {false}
+        showStandardStreams = true
+    }
 }
 
 repositories {
@@ -29,6 +32,9 @@ dependencies {
              testImplementation 'junit:junit:4.12'
 }
 
+compileJava {
+            options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+}
 
 testlogger {
     theme 'standard'

@@ -11,9 +11,11 @@ import uk.ac.gla.socs.grl.model.element.*;
  * expresses knowllink about interactions between intentional elements
  * in different categories.
 */
-public class ContributionLink<I, S, C> extends AbstractLink<I, S, C> implements Link<C> {
+public final class ContributionLink<I, S, C> extends AbstractLink<I, S, C> implements Link<C> {
 
-    public ContributionLink(Element<I, S> src, C contribution, Element<I, S> dest) {
+    public ContributionLink(IntentionalElement<I, S> src,
+                            C contribution,
+                            ContributingElement<I, S> dest) {
         super(Optional.of(contribution), LinkKind.contribution, src, dest);
     }
 }

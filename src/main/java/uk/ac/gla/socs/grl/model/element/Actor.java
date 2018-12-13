@@ -2,16 +2,19 @@ package uk.ac.gla.socs.grl.model.element;
 
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Optional;
 
 /**
  *
  */
-public class Actor<I, S> extends AbstractElement<I, S> implements Element<I, S> {
+public class Actor<I, S> extends AbstractElement<I, S> implements DependableElement<I,S>,
+                                                                  Element<I, S>
+{
 
     private Set<IntentionalElement<I,S>> enclosedElements;
 
-    public Actor(S satisfaction, I importance, String title) {
-        super(DecompositionType.AND, satisfaction, importance, title);
+    public Actor(I importance, String title) {
+        super(Optional.empty(), Optional.empty(), importance, title);
         this.enclosedElements = new HashSet<>();
     }
 

@@ -1,5 +1,7 @@
 package uk.ac.gla.socs.grl.model.element;
 
+import java.util.Optional;
+
 /**
  * A (hard) Goal is a condition or state of affairs in the world that
  * the stakeholders would like to achieve. How the goal is to be
@@ -11,9 +13,17 @@ package uk.ac.gla.socs.grl.model.element;
  * achieve and generally describes the functional requirements of the
  * target information system.
  */
-public class Goal<I, S> extends AbstractElement<I, S> implements IntentionalElement<I,S> {
+public class Goal<I, S> extends AbstractElement<I, S> implements ContributingElement<I,S>,
+                                                                 ComplexElement<I,S>,
+                                                                 DependableElement<I,S>,
+                                                                 IntentionalElement<I,S>
+{
 
     public Goal(S satisfaction, I importance, String title) {
-        super(DecompositionType.AND, satisfaction, importance, title);
+        super(Optional.of(DecompositionType.AND), Optional.of(satisfaction), importance, title);
+    }
+
+    public Goal(I importance, String title) {
+        super(Optional.of(DecompositionType.AND), Optional.empty(), importance, title);
     }
 }

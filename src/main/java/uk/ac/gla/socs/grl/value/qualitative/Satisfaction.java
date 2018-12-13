@@ -16,7 +16,7 @@ public enum Satisfaction {
     /**
      * The satisfaction level of the intentional element or indicator is unknown.
      */
-    UNKOWN,
+    UNKNOWN,
     /**
      * The intentional element or indicator is sufficiently satisfied.
      */

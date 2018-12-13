@@ -1,13 +1,17 @@
 package uk.ac.gla.socs.grl.model.element;
 
+import java.util.Optional;
+
 public interface Element<I, S> {
 
-    DecompositionType getDecomposition();
+    public Optional<DecompositionType> getDecomposition();
 
-    S getSatisfaction();
+    public Optional<S> getSatisfaction();
 
-    I getImportance();
+    public void setSatisfaction(S s);
 
-    String getTitle();
+    public I getImportance();
+
+    public String getTitle();
 
 }

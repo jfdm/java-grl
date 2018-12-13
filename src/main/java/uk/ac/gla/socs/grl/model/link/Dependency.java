@@ -1,6 +1,6 @@
 package uk.ac.gla.socs.grl.model.link;
 
-import uk.ac.gla.socs.grl.model.element.Element;
+import uk.ac.gla.socs.grl.model.element.DependableElement;
 
 import java.util.Optional;
 
@@ -11,9 +11,9 @@ import java.util.Optional;
  * the dependum to the depender.
  *
  */
-public class Dependency<I, S, C> extends AbstractLink<I, S, C> implements Link<C> {
+public final class Dependency<I, S, C> extends AbstractLink<I, S, C> implements Link<C> {
 
-    public Dependency(Element<I, S> src, Element<I, S> dest) {
+    public Dependency(DependableElement<I, S> src, DependableElement<I, S> dest) {
         super(Optional.empty(), LinkKind.dependency, src, dest);
     }
 

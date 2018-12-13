@@ -1,6 +1,6 @@
 package uk.ac.gla.socs.grl.model.link;
 
-import uk.ac.gla.socs.grl.model.element.Element;
+import uk.ac.gla.socs.grl.model.element.*;
 
 import java.util.Optional;
 
@@ -9,9 +9,11 @@ the correlation is not an explicit desire, but is a side-effect and
 that correlations are only used with intentional elements and not with
 indicators.
 */
-public class CorrelationLink<I, S, C> extends AbstractLink<I, S, C> implements Link<C> {
+public final class CorrelationLink<I, S, C> extends AbstractLink<I, S, C> implements Link<C> {
 
-    public CorrelationLink(Element<I, S> src, C contribution, Element<I, S> dest) {
+    public CorrelationLink(IntentionalElement<I, S> src,
+                           C contribution,
+                           ContributingElement<I, S> dest) {
         super(Optional.of(contribution), LinkKind.correlation, src, dest);
     }
 }

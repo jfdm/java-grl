@@ -1,5 +1,6 @@
 package uk.ac.gla.socs.grl.model.element;
 
+import java.util.Optional;
 
 /**
  * A Task specifies a particular way of doing something. When a task
@@ -12,9 +13,15 @@ package uk.ac.gla.socs.grl.model.element;
  * system to meet the needs stated in the goals and softgoals.
  *
  */
-public class Task<I, S> extends AbstractElement<I, S> implements IntentionalElement<I,S> {
-
+public class Task<I, S> extends AbstractElement<I, S> implements ContributingElement<I,S>,
+                                                                 ComplexElement<I,S>,
+                                                                 IntentionalElement<I,S>,
+                                                                 DependableElement<I,S>
+{
+    public Task(I importance, String title) {
+        super(Optional.of(DecompositionType.AND), Optional.empty(), importance, title);
+    }
     public Task(S satisfaction, I importance, String title) {
-        super(DecompositionType.AND, satisfaction, importance, title);
+        super(Optional.of(DecompositionType.AND), Optional.of(satisfaction), importance, title);
     }
 }

@@ -3,10 +3,18 @@ package uk.ac.gla.socs.grl.model;
 import uk.ac.gla.socs.grl.model.link.*;
 import uk.ac.gla.socs.grl.model.element.*;
 import uk.ac.gla.socs.grl.utility.*;
+import uk.ac.gla.socs.grl.evaluation.*;
 
+import io.atlassian.fugue.Pair;
+
+import java.util.Collection;
 import java.util.List;
+import java.util.LinkedList;
 import java.util.Set;
 import java.util.Optional;
+import java.util.Queue;
+import java.util.HashSet;
+
 
 /**
  * A GRL model instance.
@@ -15,14 +23,11 @@ public class GRLSpec<I, S, C> {
 
     private Graph<Element<I, S>, Link<C>> model;
     private String name;
-    private C defaultContribution;
     private I defaultImportance;
-    private S defaultSatisfaction;
 
-    public GRLSpec(String name, I defaultImportance, S defaultSatisfaction, C defaultContribution) {
-        this.defaultContribution = defaultContribution;
-        this.defaultSatisfaction = defaultSatisfaction;
+    public GRLSpec(String name, I defaultImportance) {
         this.defaultImportance = defaultImportance;
+
         this.name = name;
         this.model = new Graph<>();
     }
@@ -31,7 +36,7 @@ public class GRLSpec<I, S, C> {
         return name;
     }
 
-    public Set<Element<I,S>> getElements() {
+    public Collection<Element<I,S>> getElements() {
         return this.model.getNodes();
     }
 
@@ -39,113 +44,109 @@ public class GRLSpec<I, S, C> {
         return this.model.getEdgesFlatten();
     }
 
-    public void addCorrelation(Element<I, S> src, Optional<C> contrib, Element<I, S> dst) {
-        Link<C> c = new CorrelationLink<>(src, contrib.orElse(this.defaultContribution), dst);
+    public void addCorrelation(IntentionalElement<I, S> src,
+                               C contrib,
+                               ContributingElement<I, S> dst) {
+        Link<C> c = new CorrelationLink<I,S,C>(src, contrib, dst);
         this.model.addLabelledEdge(dst, src, Optional.of(c));
     }
 
-    public void addContribution(Element<I, S> src, Optional<C> contrib, Element<I, S> dst) {
-        Link<C> c = new ContributionLink<>(src, contrib.orElse(this.defaultContribution), dst);
+    public void addContribution(IntentionalElement<I, S> src,
+                                C contrib,
+                                ContributingElement<I, S> dst) {
+        Link<C> c = new ContributionLink<I,S,C>(src, contrib, dst);
         this.model.addLabelledEdge(dst, src, Optional.of(c));
     }
 
 
-    public void addDependency(Element<I, S> src,
-                              Element<I, S> dst) {
-        this.model.addEdge(dst,src);
+    public void addDependency(DependableElement<I, S> src,
+                              DependableElement<I, S> dst) {
+        Link<C> c = new Dependency<I,S,C>(src,dst);
+        this.model.addLabelledEdge(src,dst,Optional.of(c));
     }
 
-    public void addXORDecomp(Element<I, S> src,
-                             List<Element<I, S>> ends) {
-        this.addDecomposition(DecompositionType.XOR, src, ends);
-    }
+    public void addDecomposition(ComplexElement<I, S> src,
+                                 List<ComplexElement<I, S>> ends) {
 
-    public void addIORDecomp(Element<I, S> src,
-                             List<Element<I, S>> ends) {
-        this.addDecomposition(DecompositionType.IOR, src, ends);
-    }
+        for (ComplexElement<I, S> dst : ends) {
 
-    public void addAndDecomp(Element<I, S> src,
-                             List<Element<I, S>> ends) {
-        this.addDecomposition(DecompositionType.AND, src, ends);
-    }
+            Link<C> edge = new Decomposition<I,S,C>(src, dst);
 
-    private void addDecomposition(DecompositionType type,
-                                  Element<I, S> src,
-                                  List<Element<I, S>> ends) {
-
-        for (Element<I, S> dst : ends) {
-
-            Link<C> edge = null;
-            switch (type) {
-                case IOR:
-                    edge = new IOR<>(src, dst);
-                    break;
-                case AND:
-                    edge = new AND<>(src, dst);
-                    break;
-                case XOR:
-                    edge = new IOR<>(src, dst);
-                    break;
-                default:
-                    edge = new AND<>(src, dst);
-                    break;
-            }
             this.model.addLabelledEdge(src, dst, Optional.of(edge));
         }
     }
 
-    public Element<I, S> addElement(Element<I, S> node) {
+    public Pair<Integer,Element<I, S>> addElement(Element<I, S> node) {
         if (node instanceof Actor) {
-            Actor<I,S> a = (Actor) node;
+            Actor<I,S> a = (Actor<I,S>) node;
             for (IntentionalElement<I,S> e : a.getElements()) {
                 this.model.addNode(e);
+                this.model.addLabelledEdge(node, e, Optional.of(new Enclosed<I,S,C>(node,e)));
             }
+
         }
         return this.model.addNode(node);
     }
 
     public void addElements(List<Element<I,S>> nodes) {
         for (Element<I,S> n : nodes) {
-            this.model.addNode(n);
+            this.addElement(n);
         }
     }
 
     public void addElements(Element<I,S>[] nodes) {
         for (Element<I,S> n : nodes) {
-            this.model.addNode(n);
+            this.addElement(n);
         }
 
     }
 
     public Actor<I, S> mkDefaultActor(String title) {
-        return (Actor<I, S>) this.addElement(new Actor<>(this.defaultSatisfaction, this.defaultImportance, title));
+        return new Actor<>(this.defaultImportance, title);
 
     }
 
     public Belief<I, S> mkDefaultBelief(String title) {
-        return (Belief<I, S>) this.addElement(new Belief<>(this.defaultSatisfaction, this.defaultImportance, title));
+        return new Belief<>(this.defaultImportance, title);
 
     }
 
 
-    public Goal<I, S> mkDefaultGoalString(String title) {
-        return (Goal<I, S>) this.addElement(new Goal<>(this.defaultSatisfaction, this.defaultImportance, title));
+    public Goal<I, S> mkDefaultGoal(String title) {
+        return new Goal<>(this.defaultImportance, title);
 
     }
 
     public SoftGoal<I, S> mkDefaultSoftGoal(String title) {
-        return (SoftGoal<I, S>) this.addElement(new SoftGoal<>(this.defaultSatisfaction, this.defaultImportance, title));
+        return new SoftGoal<>(this.defaultImportance, title);
     }
 
     public Resource<I, S> mkDefaultResource(String title) {
-        return (Resource<I, S>) this.addElement(new Resource<>(this.defaultSatisfaction, this.defaultImportance, title));
+        return new Resource<>(this.defaultImportance, title);
     }
     public Task<I, S> mkDefaultTask(String title) {
-        return (Task<I, S>) this.addElement(new Task<>(this.defaultSatisfaction, this.defaultImportance, title));
+        return new Task<>(this.defaultImportance, title);
     }
 
-    public List<GRLElementEvalResult<I, S>> evaluate(GRLEvaluationStrategy<I, S, C> strategy) {
-        return strategy.evaluate(this.model);
+    public List<GRLElementEvalResult<I, S>> evaluate(AbstractEvaluationStrategy<I, S, C> strategy) {
+        return this.canEvaluate() ? strategy.evaluate(this.model) : (new LinkedList<>());
+    }
+
+    private boolean canEvaluate() {
+        Queue<Integer> nodes = new LinkedList<>();
+        nodes.addAll(model.getNodeIDs());
+
+        boolean leaf_nodes_satisfied = true;
+        for (Integer node : nodes) {
+            Maybe<Element<I,S>> eprime = this.model.getNodeByID(node);
+            Set<Edge<Element<I,S>,Link<C>>> children = this.model.getChildren(node);
+
+            if (children.isEmpty() && eprime instanceof Just) {
+                // We are leaf
+                Element<I,S> e = ((Just<Element<I,S>>) eprime).getValue();
+                leaf_nodes_satisfied = leaf_nodes_satisfied && e.getSatisfaction().isPresent();
+            }
+        }
+        return leaf_nodes_satisfied;
     }
 }

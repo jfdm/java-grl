@@ -15,7 +15,10 @@ public abstract class AbstractLink<I, S, C> implements Link<C> {
     private Element<I, S> src;
     private Element<I, S> dest;
 
-    public AbstractLink(Optional<C> contribution, LinkKind kind, Element<I, S> src, Element<I, S> dest) {
+    public AbstractLink(  Optional<C> contribution
+                        , LinkKind kind
+                        , Element<I, S> src
+                        , Element<I, S> dest) {
         this.contribution = contribution;
         this.kind = kind;
         this.src = src;
