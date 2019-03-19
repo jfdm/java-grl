@@ -49,6 +49,7 @@ public class QualitativeEvaluationTest {
 
         myspec.addDecomposition(connection,temp);
 
+        assertTrue(myspec.getElements().size() == 4);
         List<GRLElementEvalResult<Importance,Satisfaction>> results = myspec.evaluate(new QualitativeEvaluation());
         assertTrue(results.size() > 0);
         for (GRLElementEvalResult<Importance,Satisfaction> result : results) {

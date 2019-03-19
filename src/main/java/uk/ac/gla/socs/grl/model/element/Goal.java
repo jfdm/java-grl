@@ -1,5 +1,6 @@
 package uk.ac.gla.socs.grl.model.element;
 
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -25,5 +26,22 @@ public class Goal<I, S> extends AbstractElement<I, S> implements ContributingEle
 
     public Goal(I importance, String title) {
         super(Optional.of(DecompositionType.AND), Optional.empty(), importance, title);
+    }
+
+        @Override
+    public boolean equals(Object o) {
+        if (o == null) {
+            return false;
+        }
+        if (this.getClass() != o.getClass()) {
+            return false;
+        }
+
+        return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }

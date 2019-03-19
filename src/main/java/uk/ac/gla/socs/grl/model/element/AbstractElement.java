@@ -1,5 +1,6 @@
 package uk.ac.gla.socs.grl.model.element;
 
+import java.util.Objects;
 import java.util.Optional;
 
 public abstract class AbstractElement<I, S> implements Element<I, S> {
@@ -45,4 +46,20 @@ public abstract class AbstractElement<I, S> implements Element<I, S> {
         return title;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == null) {
+            return false;
+        }
+        if (this.getClass() != o.getClass()) {
+            return false;
+        }
+        AbstractElement e = (AbstractElement) o;
+        return Objects.equals(this.title, e.title);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(title);
+    }
 }

@@ -78,7 +78,7 @@ public class Graph<V, E> {
     }
     private Maybe<Integer> getID(V node) {
         for (Entry<Integer,V> kv : this.legend.entrySet()) {
-            if (kv.getValue() == node) {
+            if (kv.getValue().equals(node)) {
                 return new Just<>(kv.getKey());
             }
         }

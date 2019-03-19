@@ -1,5 +1,6 @@
 package uk.ac.gla.socs.grl.model.element;
 
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -24,5 +25,22 @@ public class SoftGoal<I, S> extends AbstractElement<I, S> implements Contributin
     }
     public SoftGoal(I importance, String title) {
         super(Optional.of(DecompositionType.AND), Optional.empty(), importance, title);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null) {
+            return false;
+        }
+        if (this.getClass() != o.getClass()) {
+            return false;
+        }
+
+        return super.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
     }
 }
